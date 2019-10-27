@@ -1,4 +1,5 @@
 // game js
+// following guide https://www.briankoponen.com/html5-javascript-game-tutorial/ 
 
 var canvas = document.getElementById("game-layer");
 var context = canvas.getContext("2d");
