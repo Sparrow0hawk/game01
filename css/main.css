@@ -1,3 +1,16 @@
 /*
 * Stylesheet for game01
 */
+
+h1 {
+  font-family: Ubuntu, sans-serif;
+  text-align: center;
+}
+
+canvas {
+  border: 10px solid black;
+}
+
+#canvas-space {
+  text-align: center;
+}
