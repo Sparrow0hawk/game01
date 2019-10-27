@@ -1,23 +1,11 @@
 // game js
 // following guide https://www.briankoponen.com/html5-javascript-game-tutorial/
 
-var canvas = document.getElementById("game-layer");
-var context = canvas.getContext("2d");
+// game entities
 
-context.fillStyle = "magenta";
-context.fillRect(0, 0, canvas.width, canvas.height);
+// player object
 
-// addition game boxes
-
-context.fillStyle = "gray";
-context.fillRect(5, 5, 10, 15);
-context.fillStyle = "blue";
-context.fillRect(25, 25, 20, 20);
-context.fillStyle = "green";
-context.fillRect(50, 50, 20, 40);
-
-// game engine
-function Player(x, y) {
+function Player (x, y) {
   this.x = x;
   this.y = y;
   this.width = 20;
@@ -25,19 +13,15 @@ function Player(x, y) {
   this.direction = -1;
 }
 
-Player.prototype.draw = function () {
-  context.fillStyle = "red";
-  context.fillRect(this.x, this.y, this.width, this.height);
-};
-
 Player.prototype.update = function () {
-  this.y = this.y + this.direction;
-  if( this.y <= 0 || this.y + this.height >= canvas.height) {
+  if (this.y <= 0 || this.y + this.height >= game.gameFieldHeight()) {
     this.direction *= -1;
   }
 };
 
-function Enemy(x, y) {
+// Enemy object
+
+function Enemy (x, y) {
   this.x = x;
   this.y = y;
   this.width = 10;
@@ -45,43 +29,106 @@ function Enemy(x, y) {
   this.direction = 1;
 }
 
-Enemy.prototype.draw = function () {
-  context.fillStyle = "blue";
-  context.fillRect(this.x, this.y, this.width, this.height);
-};
-
 Enemy.prototype.update = function () {
-  this.y = this.y + this.direction;
-  if( this.y <= 0 || this.y + this.height >= canvas.height) {
+  if (this.y <= 0 || this.y + this.height >= game.gameFieldHeight()) {
     this.direction *= -1;
   }
 };
 
-var player = new Player(100, 175);
-var enemy1 = new Enemy(20, 25);
-var enemy2 = new Enemy(80, 25);
-var enemy3 = new Enemy(160, 25);
+// Renderer object
 
-function frameUpdate() {
-  canvas = document.getElementById("game-layer");
-  context = canvas.getContext("2d");
+var renderer = (function () {
+  function _drawEnemy (context, enemy) {
+    context.fillStyle = "red";
+    context.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+  }
 
-  context.fillStyle = "magenta";
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  function _drawPlayer (context, player) {
+    context.fillStyle = "blue";
+    context.fillRect(player.x, player.y, player.width, player.height);
+  }
 
-  player.update();
-  player.draw();
+  function _render () {
+    var canvas = document.getElementById("game-layer");
+    var context = canvas.getContext("2d");
 
-  enemy1.update();
-  enemy1.draw();
+    context.fillStyle = "magenta";
+    context.fillRect(0, 0, canvas.width, canvas.height);
 
-  enemy2.update();
-  enemy2.draw();
+    var i
+    var entity
+    var entities = game.entities();
 
-  enemy3.update();
-  enemy3.draw();
+    for (i = 0; i < entities.length; i++) {
+      entity = entities[i]
 
-  window.requestAnimationFrame(frameUpdate);
-}
+      if (entity instanceof Enemy) {
+        _drawEnemy(context, entity);
+      }
 
-frameUpdate();
+      if (entity instanceof Player) {
+        _drawPlayer(context, entity);
+      }
+    }
+  }
+
+  return {
+    render: _render
+  };
+})();
+
+// physics object
+
+var physics = (function () {
+
+  function _update () {
+    var i
+    var entities = game.entities();
+
+    for (i = 0; i < entities.length; i++) {
+      entities[i].y += entities[i].direction
+    }
+  }
+
+  return {
+    update: _update
+  };
+})();
+
+// game object
+
+var game = (function () {
+  var _gameFieldHeight = 200;
+  var _entities = [];
+
+  function _start () {
+    _entities.push(new Player(100, 175));
+    _entities.push(new Enemy(20, 25));
+    _entities.push(new Enemy(80, 25));
+    _entities.push(new Enemy(160, 25));
+
+    window.requestAnimationFrame(this.update.bind(this));
+  }
+
+  function _update () {
+    physics.update();
+
+    var i;
+    for (i = 0; i < _entities.length; i++) {
+      _entities[i].update();
+    }
+
+    renderer.render();
+
+    window.requestAnimationFrame(this.update.bind(this));
+  }
+
+  return {
+    start: _start,
+    update: _update,
+    entities: function () { return _entities; },
+    gameFieldHeight: function () { return _gameFieldHeight; }
+  };
+})();
+
+game.start();
